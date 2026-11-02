@@ -29,6 +29,12 @@ def clean(t: str) -> str:
     t = re.sub(rf"(?<=[\s(=])D(?=[{CYR}])", "-", t)            # «Dлг», « Dвид»
     t = re.sub(rf"(?<=[{CYR}])D$", "-", t, flags=re.M)
     t = t.replace("‐", "-")
+    # другие артефакты дефиса/минуса: «!», «&», «%», «A» между символами
+    t = re.sub(rf"(?<=[{CYR}A-Za-z0-9])!(?=[{CYR}A-Za-z0-9(])", "-", t)   # УБТ!Р!73, 10!24
+    t = re.sub(rf"(?<=[0-9])!(?=[\s)])", "-", t)                            # заряды «1!»
+    t = re.sub(rf"(?<=[{CYR}])&(?=\s|$)", "-", t, flags=re.M)              # «Относитель&» в таблицах
+    t = re.sub(rf"(?<=[{CYR}A-Za-z])%(?=[{CYR}A-Za-z0-9])", "-", t)          # ОП%10, УНБ%600
+    t = re.sub(rf"(?<=[{CYR}0-9%])A(?=[{CYR}0-9])", "-", t)                  # сAрасстояние, 2%Aная, минA1
     # убрать общий отступ и лишние пустые строки
     lines = [l.rstrip() for l in t.split("\n")]
     ind = min((len(l) - len(l.lstrip()) for l in lines if l.strip()), default=0)

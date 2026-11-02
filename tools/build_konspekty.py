@@ -52,6 +52,15 @@ def main():
             figline = f"\n🖼 рисунок страницы: `рисунки/{code}/стр{i:03d}.jpg`\n" if fig.exists() else ""
             parts.append(f"\n<!-- стр. {i} -->\n### стр. {i} (печ. {i+4})\n{figline}\n```text\n{txt}\n```\n")
         (OUT / f"{code}_{name}.md").write_text("\n".join(parts), encoding="utf-8")
+    # индекс для поиска фраз: одна строка = одна страница (переносы строк склеены)
+    import re
+    rows = []
+    for code, a, b, name in SECTIONS:
+        for i in range(a, b + 1):
+            t = (PAGES / f"стр{i:03d}.txt").read_text(encoding="utf-8")
+            t = re.sub(r"\s+", " ", t).strip()
+            rows.append(f"{code} | стр. {i} | {t}")
+    (ROOT / "конспекты" / "_поиск_постранично.txt").write_text("\n".join(rows) + "\n", encoding="utf-8")
     print("ok")
 
 if __name__ == "__main__":
