@@ -1,19 +1,25 @@
 """Контроль учебных расчётов варианта 7 в единицах СИ."""
 
+from copy import deepcopy
+from decimal import Decimal
 from fractions import Fraction
+import importlib
+import json
 from math import ceil
 import unittest
 
 
-def added_volume(initial_volume, initial_density, target_density, added_density):
-    return initial_volume * Fraction(
-        target_density - initial_density, added_density - target_density
-    )
+# Импорт из соседнего каталога при прямом запуске этого файла.
+if not __package__:
+    import sys
+    from pathlib import Path
 
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-def mixture_density(initial_volume, initial_density, add_volume, added_density):
-    total_mass = initial_volume * initial_density + add_volume * added_density
-    return Fraction(total_mass, initial_volume + add_volume)
+calculation = importlib.import_module("расчеты.calculate_variant_07")
+independent = importlib.import_module("проверка.solve_independently")
+added_volume = calculation.added_volume
+mixture_density = calculation.mixture_density
 
 
 class BalanceTests(unittest.TestCase):
@@ -91,6 +97,135 @@ class BalanceTests(unittest.TestCase):
     def test_dilution_lecture_example_5(self):
         result = self.check_change(159, 1920, 1440, 1000)
         self.assertEqual(result, Fraction(1908, 11))
+
+
+class VariantInputTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.inputs = json.loads(calculation.DEFAULT_INPUT.read_text(encoding="utf-8"))
+
+    def setUp(self):
+        self.data = deepcopy(self.inputs)
+
+    def solve_dilution(self):
+        return calculation.calculate(self.data)["results"]["dilution"]
+
+    def test_no_change_requires_no_addition(self):
+        self.data["dilution"]["density_reduction"] = 0
+        self.data["dilution"]["initial_oil_volume_fraction"] = "1/10"
+        dilution = self.solve_dilution()
+        for name in ("water", "oil"):
+            with self.subTest(addition=name):
+                result = dilution[name]
+                self.assertEqual(result["status"], "no_change")
+                self.assertEqual(result["added_volume"]["exact"], "0")
+                self.assertEqual(result["final_oil_volume_percent"]["exact"], "10")
+        self.assertIsNone(dilution["volume_comparison"]["reduction_percent"])
+        self.assertEqual(added_volume(200, 1000, 1000, 1000), 0)
+
+    def test_unreachable_target_preserves_feasible_alternative(self):
+        self.data["dilution"]["initial_density"] = 1150
+        dilution = self.solve_dilution()
+        self.assertEqual(dilution["water"]["status"], "unreachable")
+        self.assertEqual(dilution["oil"]["status"], "calculated")
+        self.assertEqual(dilution["oil"]["achieved_density"]["exact"], "950")
+        self.assertIsNone(dilution["volume_comparison"])
+        with self.assertRaises(calculation.UnreachableDensity):
+            added_volume(100, 1350, 4900, 4700)
+
+    def test_target_equal_to_density_of_addition(self):
+        with self.assertRaisesRegex(calculation.UnreachableDensity, "равна плотности"):
+            added_volume(200, 1200, 1000, 1000)
+
+    def test_invalid_mass_and_volume_fractions(self):
+        keys = {
+            "bentonite": "bentonite_mass_fraction",
+            "dilution": "initial_oil_volume_fraction",
+        }
+        for task, field in keys.items():
+            for invalid in ("-1/10", "11/10", True, "1/0"):
+                with self.subTest(field=field, value=invalid):
+                    data = deepcopy(self.data)
+                    data[task][field] = invalid
+                    with self.assertRaisesRegex(ValueError, field):
+                        calculation.calculate(data)
+
+    def test_negative_and_zero_initial_volumes(self):
+        for task in ("weighting", "dilution"):
+            for invalid in (-1, 0):
+                with self.subTest(task=task, volume=invalid):
+                    data = deepcopy(self.data)
+                    data[task]["initial_volume"] = invalid
+                    with self.assertRaisesRegex(ValueError, "initial_volume"):
+                        calculation.calculate(data)
+
+    def test_existing_oil_is_included_for_both_alternatives(self):
+        self.data["dilution"]["initial_oil_volume_fraction"] = "1/10"
+        dilution = self.solve_dilution()
+        self.assertEqual(dilution["water"]["final_oil_volume_percent"]["exact"], "20/3")
+        self.assertEqual(dilution["oil"]["final_oil_volume_percent"]["exact"], "1030/31")
+        self.assertEqual(dilution["water"]["checks"]["oil_volume_balance"], "passed")
+        self.assertEqual(dilution["oil"]["checks"]["oil_volume_balance"], "passed")
+
+    def test_changed_initial_density_and_exact_decimal_inputs(self):
+        self.data["dilution"]["initial_density"] = "1500"
+        self.data["dilution"]["oil_density"] = Decimal("825.0")
+        dilution = self.solve_dilution()
+        self.assertEqual(dilution["target_density"]["exact"], "1300")
+        self.assertEqual(dilution["water"]["added_volume"]["exact"], "400/3")
+        self.assertEqual(dilution["oil"]["added_volume"]["exact"], "1600/19")
+
+    def test_invalid_density_and_density_reduction(self):
+        for field, value in [("oil_density", -825), ("density_reduction", 1600), ("density_reduction", -1)]:
+            with self.subTest(field=field, value=value):
+                data = deepcopy(self.data)
+                data["dilution"][field] = value
+                with self.assertRaises(ValueError):
+                    calculation.calculate(data)
+
+    def test_incompatible_oil_content_and_initial_density(self):
+        self.data["dilution"]["initial_oil_volume_fraction"] = 1
+        with self.assertRaisesRegex(ValueError, "initial_oil_volume_fraction"):
+            self.solve_dilution()
+
+    def test_registry_matches_recalculation(self):
+        path = calculation.DEFAULT_INPUT.parent.parent / "расчеты" / "RESULTS.json"
+        expected = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(calculation.calculate(self.data), expected)
+
+    def test_all_exact_results_match_independent_solver(self):
+        actual = calculation.calculate(self.data)["results"]
+        expected = {
+            "weighting": independent.solve_weighting(self.data["weighting"]),
+            "bentonite": independent.solve_bentonite(self.data["bentonite"]),
+            "dilution": independent.solve_dilution(self.data["dilution"]),
+        }
+        aliases = {
+            "achieved_density": "final_density",
+            "total_volume": "final_volume",
+            "mixture_density": "final_density",
+        }
+
+        def flatten_results(values):
+            exact = {}
+            for key, value in values.items():
+                if not isinstance(value, dict) or key == "checks":
+                    continue
+                if "exact" in value:
+                    exact[aliases.get(key, key)] = Fraction(value["exact"])
+                elif key.endswith("_comparison"):
+                    prefix = key.removesuffix("_comparison")
+                    exact[f"{prefix}_difference"] = Fraction(value["difference"]["exact"])
+                    exact[f"{prefix}_saving_percent"] = Fraction(value["reduction_percent"]["exact"])
+                else:
+                    exact[key] = flatten_results(value)
+            return exact
+
+        self.assertEqual(flatten_results(actual), expected)
+
+    def test_rounding_of_exact_halves(self):
+        self.assertEqual(calculation.rounding(Fraction(201, 200), 2), "1.01")
+        self.assertEqual(calculation.rounding(Fraction(-201, 200), 2), "-1.01")
 
 
 if __name__ == "__main__":

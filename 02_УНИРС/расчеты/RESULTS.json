@@ -1,0 +1,302 @@
+{
+  "schema_version": 1,
+  "inputs": {
+    "variant": 7,
+    "units": {
+      "mass": "кг",
+      "volume": "м³",
+      "density": "кг/м³",
+      "fraction": "1"
+    },
+    "weighting": {
+      "initial_volume": 100,
+      "initial_density": 1350,
+      "target_density": 1600,
+      "iron_oxide_density": 4700,
+      "barite_density": 4250
+    },
+    "bentonite": {
+      "basis_mass": 100,
+      "bentonite_mass_fraction": "7/100",
+      "bentonite_density": 2500,
+      "water_density": 1000
+    },
+    "dilution": {
+      "initial_volume": 200,
+      "initial_density": 1600,
+      "density_reduction": 200,
+      "initial_oil_volume_fraction": 0,
+      "water_density": 1000,
+      "oil_density": 825
+    },
+    "assumptions": {
+      "common": "Однородная смесь, аддитивность объёмов, постоянные плотности, отсутствие потерь и откачки.",
+      "weighting": "Сухие утяжелители. Для барита принята расчётная плотность из § 1.1 пособия.",
+      "bentonite": "Два компонента: пресная вода и сухой бентонит. Расчётная основа — 100 кг готовой смеси.",
+      "dilution": "Оркестратор принял начальную плотность из результата задачи № 1 и нулевую исходную объёмную долю нефти для условного сценария. Для ненулевой исходной нефтяной доли плотности исходной и добавляемой нефти считаются одинаковыми. Снижение фиксировано, целевая плотность вычисляется. Вода и нефть — самостоятельные альтернативы. Общее нефтесодержание вычисляется от конечного объёма."
+    },
+    "methodology": {
+      "bibliography": "../SOURCES.md",
+      "handbook_index": "../источники/МЕТОДИКА_ПОСОБИЯ.md",
+      "formulas": "ФОРМУЛЫ.md",
+      "decisions": "../DECISIONS.md",
+      "problem_statement": "../задания/УСЛОВИЯ.md",
+      "weighting": "Пособие, PDF с. 8, табл. 1, с. 10–11, (11), (21)–(22), с. 43, п. 1 и строка 7.",
+      "bentonite": "Пособие, PDF с. 12, пример 2, с. 43, п. 2.",
+      "dilution": "Пособие, PDF с. 12–13, (25)–(28), с. 40, (99), (102), с. 43, п. 3."
+    }
+  },
+  "rounding": {
+    "method": "До ближайшего значения, при равенстве — от нуля. Округляются только поля rounded.",
+    "places_default": 2,
+    "places_bentonite_volumes": 4,
+    "exact": "Строка целого числа или несократимой обыкновенной дроби в указанной единице."
+  },
+  "results": {
+    "weighting": {
+      "initial_mass": {
+        "exact": "135000",
+        "unit": "кг",
+        "rounded": "135000.00"
+      },
+      "iron_oxide": {
+        "status": "calculated",
+        "added_volume": {
+          "exact": "250/31",
+          "unit": "м³",
+          "rounded": "8.06"
+        },
+        "added_mass": {
+          "exact": "1175000/31",
+          "unit": "кг",
+          "rounded": "37903.23"
+        },
+        "final_volume": {
+          "exact": "3350/31",
+          "unit": "м³",
+          "rounded": "108.06"
+        },
+        "final_mass": {
+          "exact": "5360000/31",
+          "unit": "кг",
+          "rounded": "172903.23"
+        },
+        "achieved_density": {
+          "exact": "1600",
+          "unit": "кг/м³",
+          "rounded": "1600.00"
+        },
+        "checks": {
+          "mass_balance": "passed",
+          "volume_balance": "passed",
+          "target_density": "passed"
+        }
+      },
+      "barite": {
+        "status": "calculated",
+        "added_volume": {
+          "exact": "500/53",
+          "unit": "м³",
+          "rounded": "9.43"
+        },
+        "added_mass": {
+          "exact": "2125000/53",
+          "unit": "кг",
+          "rounded": "40094.34"
+        },
+        "final_volume": {
+          "exact": "5800/53",
+          "unit": "м³",
+          "rounded": "109.43"
+        },
+        "final_mass": {
+          "exact": "9280000/53",
+          "unit": "кг",
+          "rounded": "175094.34"
+        },
+        "achieved_density": {
+          "exact": "1600",
+          "unit": "кг/м³",
+          "rounded": "1600.00"
+        },
+        "checks": {
+          "mass_balance": "passed",
+          "volume_balance": "passed",
+          "target_density": "passed"
+        }
+      },
+      "mass_comparison": {
+        "difference": {
+          "exact": "3600000/1643",
+          "unit": "кг",
+          "rounded": "2191.11"
+        },
+        "reduction_percent": {
+          "exact": "2880/527",
+          "unit": "%",
+          "rounded": "5.46"
+        },
+        "reference": "barite"
+      },
+      "volume_comparison": {
+        "difference": {
+          "exact": "2250/1643",
+          "unit": "м³",
+          "rounded": "1.37"
+        },
+        "reduction_percent": {
+          "exact": "450/31",
+          "unit": "%",
+          "rounded": "14.52"
+        },
+        "reference": "barite"
+      }
+    },
+    "bentonite": {
+      "water_mass": {
+        "exact": "93",
+        "unit": "кг",
+        "rounded": "93.00"
+      },
+      "bentonite_mass": {
+        "exact": "7",
+        "unit": "кг",
+        "rounded": "7.00"
+      },
+      "water_volume": {
+        "exact": "93/1000",
+        "unit": "м³",
+        "rounded": "0.0930"
+      },
+      "bentonite_volume": {
+        "exact": "7/2500",
+        "unit": "м³",
+        "rounded": "0.0028"
+      },
+      "total_volume": {
+        "exact": "479/5000",
+        "unit": "м³",
+        "rounded": "0.0958"
+      },
+      "mixture_density": {
+        "exact": "500000/479",
+        "unit": "кг/м³",
+        "rounded": "1043.84"
+      },
+      "bentonite_volume_percent": {
+        "exact": "1400/479",
+        "unit": "% об.",
+        "rounded": "2.92"
+      },
+      "checks": {
+        "mass_balance": "passed",
+        "volume_balance": "passed",
+        "fraction_balance": "passed",
+        "density": "passed"
+      }
+    },
+    "dilution": {
+      "initial_mass": {
+        "exact": "320000",
+        "unit": "кг",
+        "rounded": "320000.00"
+      },
+      "target_density": {
+        "exact": "1400",
+        "unit": "кг/м³",
+        "rounded": "1400.00"
+      },
+      "water": {
+        "status": "calculated",
+        "added_volume": {
+          "exact": "100",
+          "unit": "м³",
+          "rounded": "100.00"
+        },
+        "added_mass": {
+          "exact": "100000",
+          "unit": "кг",
+          "rounded": "100000.00"
+        },
+        "final_volume": {
+          "exact": "300",
+          "unit": "м³",
+          "rounded": "300.00"
+        },
+        "final_mass": {
+          "exact": "420000",
+          "unit": "кг",
+          "rounded": "420000.00"
+        },
+        "achieved_density": {
+          "exact": "1400",
+          "unit": "кг/м³",
+          "rounded": "1400.00"
+        },
+        "checks": {
+          "mass_balance": "passed",
+          "volume_balance": "passed",
+          "target_density": "passed",
+          "oil_volume_balance": "passed"
+        },
+        "final_oil_volume_percent": {
+          "exact": "0",
+          "unit": "% об.",
+          "rounded": "0.00"
+        }
+      },
+      "oil": {
+        "status": "calculated",
+        "added_volume": {
+          "exact": "1600/23",
+          "unit": "м³",
+          "rounded": "69.57"
+        },
+        "added_mass": {
+          "exact": "1320000/23",
+          "unit": "кг",
+          "rounded": "57391.30"
+        },
+        "final_volume": {
+          "exact": "6200/23",
+          "unit": "м³",
+          "rounded": "269.57"
+        },
+        "final_mass": {
+          "exact": "8680000/23",
+          "unit": "кг",
+          "rounded": "377391.30"
+        },
+        "achieved_density": {
+          "exact": "1400",
+          "unit": "кг/м³",
+          "rounded": "1400.00"
+        },
+        "checks": {
+          "mass_balance": "passed",
+          "volume_balance": "passed",
+          "target_density": "passed",
+          "oil_volume_balance": "passed"
+        },
+        "final_oil_volume_percent": {
+          "exact": "800/31",
+          "unit": "% об.",
+          "rounded": "25.81"
+        }
+      },
+      "volume_comparison": {
+        "difference": {
+          "exact": "700/23",
+          "unit": "м³",
+          "rounded": "30.43"
+        },
+        "reduction_percent": {
+          "exact": "700/23",
+          "unit": "%",
+          "rounded": "30.43"
+        },
+        "reference": "water"
+      }
+    }
+  }
+}
