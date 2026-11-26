@@ -209,7 +209,7 @@ def prepare_docx(pandoc_docx, output, headings, pages):
             previous = paragraph._p.getprevious()
             if previous is not None and previous.tag == qn("w:p"):
                 lead = Paragraph(previous, doc._body)
-                if 0 < len(lead.text) <= 120:
+                if lead.text.strip():
                     lead.paragraph_format.keep_with_next = True
     for table in doc.tables:
         table.rows[0]._tr.get_or_add_trPr().append(OxmlElement("w:tblHeader"))
