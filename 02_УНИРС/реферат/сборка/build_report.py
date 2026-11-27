@@ -200,7 +200,7 @@ def prepare_docx(pandoc_docx, output, headings, pages):
     add_contents(doc, chapter_headings, pages)
 
     for paragraph in doc.paragraphs:
-        if re.match(r"Таблица\s+\d+\s+[—–]", paragraph.text):
+        if re.match(r"Таблица\s+\d+\s+[-—–]", paragraph.text):
             paragraph.style = doc.styles["Table Caption"]
             paragraph.paragraph_format.keep_with_next = True
         if paragraph._p.xpath(".//w:drawing"):
@@ -214,11 +214,13 @@ def prepare_docx(pandoc_docx, output, headings, pages):
                     lead.paragraph_format.keep_with_next = True
     for table in doc.tables:
         table.rows[0]._tr.get_or_add_trPr().append(OxmlElement("w:tblHeader"))
-        for row in table.rows:
+        last_row = len(table.rows) - 1
+        for row_index, row in enumerate(table.rows):
             row._tr.get_or_add_trPr().append(OxmlElement("w:cantSplit"))
             for cell in row.cells:
                 for paragraph in cell.paragraphs:
                     paragraph.style = doc.styles["Compact"]
+                    paragraph.paragraph_format.keep_with_next = row_index < last_row
 
     page_number = doc.sections[0].footer.paragraphs[0]
     page_number.alignment = WD_ALIGN_PARAGRAPH.CENTER
