@@ -31,6 +31,7 @@ CHAPTERS = (
     "08_Литература.md",
 )
 STEM = "Реферат_вариант_07"
+FINAL_STEM = f"{STEM}_ФИНАЛ"
 
 
 def run(*args, **kwargs):
@@ -271,13 +272,13 @@ def main():
         pandoc_docx = scratch / "source.docx"
         probe = scratch / "pagination.docx"
         reference_doc(reference)
-        run("pandoc", "--from=markdown-smart", "--toc", "--toc-depth=2",
+        run("pandoc", "--from=markdown-smart", "--metadata=lang:ru-RU", "--toc", "--toc-depth=2",
             f"--reference-doc={reference}", f"--resource-path={output}",
             str(markdown), "-o", str(pandoc_docx))
 
         prepare_docx(pandoc_docx, probe, headings, [""] * len(headings))
         pages = find_pages(export_pdf(probe, scratch, scratch / "office"), headings)
-        docx = output / (STEM + ".docx")
+        docx = output / (FINAL_STEM + ".docx")
         prepare_docx(pandoc_docx, docx, headings, pages)
         pdf = export_pdf(docx, scratch, scratch / "office")
         if find_pages(pdf, headings) != pages:
