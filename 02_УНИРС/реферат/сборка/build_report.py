@@ -31,7 +31,7 @@ CHAPTERS = (
     "08_Литература.md",
 )
 STEM = "Реферат_вариант_07"
-FINAL_STEM = f"{STEM}_ФИНАЛ"
+SUBMISSION_STEM = f"{STEM}_К_СДАЧЕ"
 
 
 def run(*args, **kwargs):
@@ -278,7 +278,7 @@ def main():
 
         prepare_docx(pandoc_docx, probe, headings, [""] * len(headings))
         pages = find_pages(export_pdf(probe, scratch, scratch / "office"), headings)
-        docx = output / (FINAL_STEM + ".docx")
+        docx = output / (SUBMISSION_STEM + ".docx")
         prepare_docx(pandoc_docx, docx, headings, pages)
         pdf = export_pdf(docx, scratch, scratch / "office")
         if find_pages(pdf, headings) != pages:
